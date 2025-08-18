@@ -70,14 +70,14 @@ export const Building: React.FC<BuildingProps> = ({
         onPointerOut={() => setHovered(false)}
       >
         <boxGeometry args={[3.5, currentHeight, 3.5]} />
-        <meshLambertMaterial color={color} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.1} />
       </mesh>
       
-      {/* Windows */}
+      {/* Windows overlay (transparent, full height) */}
       {currentHeight > 2 && (
-        <mesh position={[1.76, currentHeight/4, 0]}>
-          <planeGeometry args={[0.1, currentHeight/2]} />
-          <meshBasicMaterial color={getWindowPattern()} />
+        <mesh position={[1.76, currentHeight/2, 0]}>
+          <planeGeometry args={[0.1, currentHeight]} />
+          <meshBasicMaterial color={getWindowPattern()} transparent opacity={0.25} />
         </mesh>
       )}
       
