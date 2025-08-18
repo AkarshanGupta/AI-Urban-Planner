@@ -5,6 +5,8 @@ import { Road } from './Road';
 import { Park } from './Park';
 import { Utility } from './Utility';
 import * as THREE from 'three';
+import { Text } from '@react-three/drei';
+import { usePlanning, PLACEMENT_GRID_SIZE } from '../../context/PlanningContext';
 
 interface CitySceneProps {
   cityData: any;
@@ -20,6 +22,7 @@ export const CityScene: React.FC<CitySceneProps> = ({
   isGenerating 
 }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const { placements } = usePlanning();
   
   // Generate city layout based on parameters
   const cityLayout = useMemo(() => {
@@ -110,6 +113,19 @@ export const CityScene: React.FC<CitySceneProps> = ({
     return layout;
   }, [cityData]);
 
+  // Map infrastructure placements (8x8 grid) to world coordinates of city grid
+  const placementWorldPositions = useMemo(() => {
+    const gridSize = cityData.size || 20;
+    const mapped = placements.map((p) => {
+      const mappedXIndex = Math.round((p.x / (PLACEMENT_GRID_SIZE - 1)) * (gridSize - 1));
+      const mappedZIndex = Math.round((p.y / (PLACEMENT_GRID_SIZE - 1)) * (gridSize - 1));
+      const worldX = (mappedXIndex - gridSize / 2) * 4;
+      const worldZ = (mappedZIndex - gridSize / 2) * 4;
+      return { ...p, worldX, worldZ };
+    });
+    return mapped;
+  }, [placements, cityData.size]);
+
   // Animation
   useFrame((state) => {
     if (isAnimating && groupRef.current) {
@@ -169,6 +185,63 @@ export const CityScene: React.FC<CitySceneProps> = ({
       {viewLayers.utilities && (
         <Utility cityLayout={cityLayout} />
       )}
+
+      {/* Infrastructure Placements from Designer */}
+      {viewLayers.infrastructure && placementWorldPositions.map((item) => {
+        const baseY = 1;
+        const labelOffset = 1.2;
+        if (item.type === 'road') {
+          return (
+            <Road
+              key={`placement-road-${item.id}`}
+              position={[item.worldX, 0.05, item.worldZ]}
+              color="#6b7280"
+              orientation={'horizontal'}
+              hasLight={false}
+            />
+          );
+        }
+        if (item.type === 'hospital') {
+          return (
+            <group key={`placement-hospital-${item.id}`} position={[item.worldX, baseY, item.worldZ]}>
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[3.5, 2, 3.5]} />
+                <meshLambertMaterial color="#ef4444" />
+              </mesh>
+              <Text position={[0, labelOffset + 1.2, 0]} fontSize={0.8} color="#991b1b" anchorX="center" anchorY="middle">Hospital</Text>
+            </group>
+          );
+        }
+        if (item.type === 'school') {
+          return (
+            <group key={`placement-school-${item.id}`} position={[item.worldX, baseY, item.worldZ]}>
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[3.5, 2, 3.5]} />
+                <meshLambertMaterial color="#3b82f6" />
+              </mesh>
+              <Text position={[0, labelOffset + 1.2, 0]} fontSize={0.8} color="#1e3a8a" anchorX="center" anchorY="middle">School</Text>
+            </group>
+          );
+        }
+        if (item.type === 'airport') {
+          return (
+            <group key={`placement-airport-${item.id}`} position={[item.worldX, 0, item.worldZ]}>
+              {/* Runway */}
+              <mesh receiveShadow position={[0, 0.05, 0]}>
+                <boxGeometry args={[8, 0.1, 2.5]} />
+                <meshLambertMaterial color="#4b5563" />
+              </mesh>
+              {/* Tower */}
+              <mesh castShadow position={[3, 1.5, 0]}>
+                <cylinderGeometry args={[0.3, 0.3, 3]} />
+                <meshLambertMaterial color="#9ca3af" />
+              </mesh>
+              <Text position={[0, 2.2, 0]} fontSize={0.8} color="#111827" anchorX="center" anchorY="middle">Airport</Text>
+            </group>
+          );
+        }
+        return null;
+      })}
     </group>
   );
 };
