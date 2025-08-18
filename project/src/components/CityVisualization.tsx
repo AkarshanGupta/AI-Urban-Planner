@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, Grid } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, Grid, Preload } from '@react-three/drei';
 import { ZoomIn, ZoomOut, RotateCcw, Eye, EyeOff, Maximize2, Play, Pause } from 'lucide-react';
 import { usePlanning } from '../context/PlanningContext';
 import { LayerControls } from './visualization/LayerControls';
@@ -60,59 +60,60 @@ export const CityVisualization: React.FC = () => {
 
       {/* 3D Canvas */}
       <Canvas className="w-full h-full" onCreated={({ scene }) => setThreeScene(scene)}>
+        <PerspectiveCamera makeDefault position={cameraPosition} />
+        <OrbitControls 
+          ref={controlsRef}
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={20}
+          maxDistance={200}
+          maxPolarAngle={Math.PI / 2.2}
+        />
+        
+        {/* Lighting */}
+        <ambientLight intensity={0.4} />
+        <directionalLight 
+          position={[50, 50, 25]} 
+          intensity={1}
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+        />
+        <pointLight position={[0, 50, 0]} intensity={0.5} />
+
+        {/* Environment (async) */}
         <Suspense fallback={null}>
-          <PerspectiveCamera makeDefault position={cameraPosition} />
-          <OrbitControls 
-            ref={controlsRef}
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={20}
-            maxDistance={200}
-            maxPolarAngle={Math.PI / 2.2}
-          />
-          
-          {/* Lighting */}
-          <ambientLight intensity={0.4} />
-          <directionalLight 
-            position={[50, 50, 25]} 
-            intensity={1}
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-          />
-          <pointLight position={[0, 50, 0]} intensity={0.5} />
-
-          {/* Environment */}
           <Environment preset="city" />
-          
-          {/* Ground Grid */}
-          <Grid 
-            args={[100, 100]} 
-            position={[0, -0.1, 0]}
-            cellSize={2}
-            cellThickness={0.5}
-            cellColor="#6b7280"
-            sectionSize={10}
-            sectionThickness={1}
-            sectionColor="#374151"
-            fadeDistance={100}
-            fadeStrength={1}
-          />
-
-          {/* City Scene */}
-          <CityScene 
-            cityData={cityData} 
-            viewLayers={viewLayers}
-            isAnimating={isAnimating}
-            isGenerating={isGenerating}
-          />
-
-          {/* Traffic Simulation */}
-          {viewLayers.infrastructure && (
-            <TrafficSimulation isAnimating={isAnimating} />
-          )}
+          <Preload all />
         </Suspense>
+        
+        {/* Ground Grid */}
+        <Grid 
+          args={[100, 100]} 
+          position={[0, -0.1, 0]}
+          cellSize={2}
+          cellThickness={0.5}
+          cellColor="#6b7280"
+          sectionSize={10}
+          sectionThickness={1}
+          sectionColor="#374151"
+          fadeDistance={100}
+          fadeStrength={1}
+        />
+
+        {/* City Scene */}
+        <CityScene 
+          cityData={cityData} 
+          viewLayers={viewLayers}
+          isAnimating={isAnimating}
+          isGenerating={isGenerating}
+        />
+
+        {/* Traffic Simulation */}
+        {viewLayers.infrastructure && (
+          <TrafficSimulation isAnimating={isAnimating} />
+        )}
       </Canvas>
 
       {/* Loading Overlay */}

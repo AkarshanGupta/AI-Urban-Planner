@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -23,6 +23,13 @@ export const Building: React.FC<BuildingProps> = ({
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [currentHeight, setCurrentHeight] = useState(isGenerating ? 0 : height);
+
+  // Ensure full height once generation ends so the model is fully rendered
+  useEffect(() => {
+    if (!isGenerating) {
+      setCurrentHeight(height);
+    }
+  }, [isGenerating, height]);
 
   // Growth animation during generation
   useFrame((state) => {

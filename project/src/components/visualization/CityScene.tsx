@@ -26,6 +26,7 @@ export const CityScene: React.FC<CitySceneProps> = ({
     const layout = [];
     const gridSize = cityData.size || 20;
     const density = cityData.populationDensity / 10000;
+    const arterialStep = 5;
     
     for (let x = 0; x < gridSize; x++) {
       for (let z = 0; z < gridSize; z++) {
@@ -35,6 +36,8 @@ export const CityScene: React.FC<CitySceneProps> = ({
         let type = 'empty';
         let height = 1;
         let color = '#e5e7eb';
+        let orientation: 'horizontal' | 'vertical' | 'intersection' | undefined;
+        let hasLight: boolean | undefined;
         
         // Determine building type based on location and parameters
         const distanceFromCenter = Math.sqrt(
@@ -42,32 +45,52 @@ export const CityScene: React.FC<CitySceneProps> = ({
         );
         const centerFactor = 1 - (distanceFromCenter / (gridSize/2));
         
-        if (random < 0.1 + density * 0.3) {
-          if (centerFactor > 0.7 && random < 0.05) {
-            type = 'skyscraper';
-            height = 15 + random * 20;
-            color = '#1f2937';
-          } else if (centerFactor > 0.5) {
-            type = 'commercial';
-            height = 5 + random * 10;
-            color = '#3b82f6';
-          } else if (random < 0.3) {
-            type = 'residential';
-            height = 2 + random * 6;
-            color = '#10b981';
-          } else {
-            type = 'industrial';
-            height = 3 + random * 5;
-            color = '#f59e0b';
-          }
-        } else if (random < 0.15) {
-          type = 'park';
-          height = 0.2;
-          color = '#059669';
-        } else if (random < 0.18) {
+        // Arterial grid: carve roads every `arterialStep` cells, aligned with traffic simulation
+        const isArterialX = x % arterialStep === 0;
+        const isArterialZ = z % arterialStep === 0;
+        if (isArterialX || isArterialZ) {
           type = 'road';
           height = 0.1;
           color = '#6b7280';
+          orientation = isArterialX && isArterialZ ? 'intersection' : (isArterialZ ? 'horizontal' : 'vertical');
+          hasLight = (x + z) % (arterialStep * 2) === 0;
+        } else {
+          // Increase base building chance so the city feels fuller by default
+          const buildingChance = Math.min(0.2 + density * 0.5 + centerFactor * 0.15, 0.9);
+          if (random < buildingChance) {
+            if (centerFactor > 0.7 && random < 0.05) {
+              type = 'skyscraper';
+              height = 15 + random * 20;
+              color = '#1f2937';
+            } else if (centerFactor > 0.5) {
+              type = 'commercial';
+              height = 5 + random * 10;
+              color = '#3b82f6';
+            } else if (random < 0.3) {
+              type = 'residential';
+              height = 2 + random * 6;
+              color = '#10b981';
+            } else {
+              type = 'industrial';
+              height = 3 + random * 5;
+              color = '#f59e0b';
+            }
+          } else if (random < buildingChance + 0.08) {
+            type = 'park';
+            height = 0.2;
+            color = '#059669';
+          } else if (random < buildingChance + 0.12) {
+            type = 'road';
+            height = 0.1;
+            color = '#6b7280';
+            orientation = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+            hasLight = Math.random() > 0.8;
+          } else {
+            // Fallback: fill remaining cells with low-rise residential to avoid empty gaps
+            type = 'residential';
+            height = 2 + random * 4;
+            color = '#10b981';
+          }
         }
         
         layout.push({
@@ -77,7 +100,9 @@ export const CityScene: React.FC<CitySceneProps> = ({
           height,
           color,
           id: `${x}-${z}`,
-          seed: random
+          seed: random,
+          orientation,
+          hasLight
         });
       }
     }
@@ -123,6 +148,8 @@ export const CityScene: React.FC<CitySceneProps> = ({
                 key={item.id}
                 position={position}
                 color={item.color}
+                orientation={item.orientation}
+                hasLight={item.hasLight}
               />
             );
           case 'park':
