@@ -5,7 +5,7 @@ import { Road } from './Road';
 import { Park } from './Park';
 import { Utility } from './Utility';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
+import { Text, Billboard } from '@react-three/drei';
 import { usePlanning, PLACEMENT_GRID_SIZE } from '../../context/PlanningContext';
 
 interface CitySceneProps {
@@ -208,7 +208,21 @@ export const CityScene: React.FC<CitySceneProps> = ({
                 <boxGeometry args={[3.5, 2, 3.5]} />
                 <meshLambertMaterial color="#ef4444" />
               </mesh>
-              <Text position={[0, labelOffset + 1.2, 0]} fontSize={0.8} color="#991b1b" anchorX="center" anchorY="middle">Hospital</Text>
+              <Billboard position={[0, labelOffset + 1.2, 0]}>
+                <Text 
+                  fontSize={0.8} 
+                  color="#fbbf24" 
+                  anchorX="center" 
+                  anchorY="middle"
+                  renderOrder={1000}
+                  material-transparent
+                  material-depthTest={false}
+                  outlineWidth={0.03}
+                  outlineColor="#111827"
+                >
+                  Hospital
+                </Text>
+              </Billboard>
             </group>
           );
         }
@@ -219,7 +233,21 @@ export const CityScene: React.FC<CitySceneProps> = ({
                 <boxGeometry args={[3.5, 2, 3.5]} />
                 <meshLambertMaterial color="#3b82f6" />
               </mesh>
-              <Text position={[0, labelOffset + 1.2, 0]} fontSize={0.8} color="#1e3a8a" anchorX="center" anchorY="middle">School</Text>
+              <Billboard position={[0, labelOffset + 1.2, 0]}>
+                <Text 
+                  fontSize={0.8} 
+                  color="#fbbf24" 
+                  anchorX="center" 
+                  anchorY="middle"
+                  renderOrder={1000}
+                  material-transparent
+                  material-depthTest={false}
+                  outlineWidth={0.03}
+                  outlineColor="#111827"
+                >
+                  School
+                </Text>
+              </Billboard>
             </group>
           );
         }
@@ -236,7 +264,21 @@ export const CityScene: React.FC<CitySceneProps> = ({
                 <cylinderGeometry args={[0.3, 0.3, 3]} />
                 <meshLambertMaterial color="#9ca3af" />
               </mesh>
-              <Text position={[0, 2.2, 0]} fontSize={0.8} color="#111827" anchorX="center" anchorY="middle">Airport</Text>
+              <Billboard position={[0, 2.2, 0]}>
+                <Text 
+                  fontSize={0.8} 
+                  color="#fbbf24" 
+                  anchorX="center" 
+                  anchorY="middle"
+                  renderOrder={1000}
+                  material-transparent
+                  material-depthTest={false}
+                  outlineWidth={0.03}
+                  outlineColor="#111827"
+                >
+                  Airport
+                </Text>
+              </Billboard>
             </group>
           );
         }
