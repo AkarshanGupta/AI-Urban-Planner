@@ -32,6 +32,13 @@ export const Building: React.FC<BuildingProps> = ({
     }
   }, [isGenerating, height]);
 
+  // Reset height at the start of generation to trigger growth animation
+  useEffect(() => {
+    if (isGenerating) {
+      setCurrentHeight(0);
+    }
+  }, [isGenerating]);
+
   // Growth animation during generation
   useFrame((state) => {
     if (isGenerating && currentHeight < height) {

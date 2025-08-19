@@ -19,6 +19,36 @@ export const CityVisualization: React.FC = () => {
     }
   };
 
+  const zoomWithFallback = (direction: 'in' | 'out') => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    const factor = 1.2;
+    if (direction === 'in') {
+      if (typeof controls.dollyIn === 'function') {
+        controls.dollyIn(factor);
+        controls.update();
+        return;
+      }
+    } else {
+      if (typeof controls.dollyOut === 'function') {
+        controls.dollyOut(factor);
+        controls.update();
+        return;
+      }
+    }
+    // Fallback: move camera along the view vector
+    const camera = controls.object;
+    const target = controls.target;
+    const dir = camera.position.clone().sub(target).normalize();
+    const dist = camera.position.distanceTo(target);
+    const newDist = direction === 'in' ? Math.max(dist / factor, controls.minDistance || 1) : Math.min(dist * factor, controls.maxDistance || 1e6);
+    camera.position.copy(dir.multiplyScalar(newDist).add(target));
+    controls.update();
+  };
+
+  const handleZoomIn = () => zoomWithFallback('in');
+  const handleZoomOut = () => zoomWithFallback('out');
+
   const toggleAnimation = () => {
     setIsAnimating(!isAnimating);
   };
@@ -28,6 +58,20 @@ export const CityVisualization: React.FC = () => {
       {/* View Controls */}
       <div className="absolute top-4 right-4 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
         <div className="flex items-center space-x-2">
+          <button
+            onClick={handleZoomIn}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            title="Zoom In"
+          >
+            <ZoomIn className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            title="Zoom Out"
+          >
+            <ZoomOut className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+          </button>
           <button
             onClick={toggleAnimation}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"

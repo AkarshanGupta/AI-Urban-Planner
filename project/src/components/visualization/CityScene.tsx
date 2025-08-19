@@ -29,7 +29,14 @@ export const CityScene: React.FC<CitySceneProps> = ({
     const layout = [];
     const gridSize = cityData.size || 20;
     const density = cityData.populationDensity / 10000;
-    const arterialStep = 5;
+    // Environmental constraints
+    const climate: string = cityData.climate;
+    const terrain: string = cityData.terrain;
+    const envRisk: number = cityData.environmentalRisk; // 0..100
+
+    // Adjust road spacing by terrain (hillier terrain → fewer arterials)
+    const isHilly = terrain === 'hilly' || terrain === 'mountainous';
+    const arterialStep = isHilly ? 6 : 5;
     
     for (let x = 0; x < gridSize; x++) {
       for (let z = 0; z < gridSize; z++) {
@@ -47,6 +54,19 @@ export const CityScene: React.FC<CitySceneProps> = ({
           Math.pow(x - gridSize/2, 2) + Math.pow(z - gridSize/2, 2)
         );
         const centerFactor = 1 - (distanceFromCenter / (gridSize/2));
+
+        // Climate/terrain/risk biases
+        let parkBias = 0;
+        if (climate === 'tropical') parkBias += 0.05;
+        if (climate === 'arid') parkBias -= 0.03;
+
+        let skyscraperBias = 0;
+        if (terrain === 'flat') skyscraperBias += 0.02;
+        if (isHilly) skyscraperBias -= 0.05;
+
+        const risk = Math.max(0, Math.min(1, envRisk / 100));
+        skyscraperBias -= risk * 0.08; // higher risk → fewer tall buildings
+        parkBias += risk * 0.05; // higher risk → more open/green buffers
         
         // Arterial grid: carve roads every `arterialStep` cells, aligned with traffic simulation
         const isArterialX = x % arterialStep === 0;
@@ -59,9 +79,13 @@ export const CityScene: React.FC<CitySceneProps> = ({
           hasLight = (x + z) % (arterialStep * 2) === 0;
         } else {
           // Increase base building chance so the city feels fuller by default
-          const buildingChance = Math.min(0.2 + density * 0.5 + centerFactor * 0.15, 0.9);
+          // Adjust by risk (higher risk → slightly less densification)
+          const buildingChance = Math.min(
+            Math.max(0.1, 0.2 + density * 0.5 + centerFactor * 0.15 - risk * 0.08),
+            0.9
+          );
           if (random < buildingChance) {
-            if (centerFactor > 0.7 && random < 0.05) {
+            if (centerFactor > 0.7 && random < 0.05 + skyscraperBias) {
               type = 'skyscraper';
               height = 15 + random * 20;
               color = '#1f2937';
@@ -78,10 +102,11 @@ export const CityScene: React.FC<CitySceneProps> = ({
               height = 3 + random * 5;
               color = '#f59e0b';
             }
-          } else if (random < buildingChance + 0.08) {
+          } else if (random < buildingChance + 0.08 + parkBias) {
             type = 'park';
             height = 0.2;
-            color = '#059669';
+            // Park palette influenced by climate
+            color = climate === 'arid' ? '#a3a3a3' : (climate === 'tropical' ? '#059669' : '#16a34a');
           } else if (random < buildingChance + 0.12) {
             type = 'road';
             height = 0.1;
@@ -94,6 +119,12 @@ export const CityScene: React.FC<CitySceneProps> = ({
             height = 2 + random * 4;
             color = '#10b981';
           }
+        }
+
+        // Terrain-driven vertical variance for buildings (hills → more height variation)
+        if (type !== 'road' && type !== 'park') {
+          const variance = isHilly ? (Math.sin(x * 0.3) + Math.cos(z * 0.3)) * 0.15 : 0;
+          height = Math.max(0.5, height * (1 + variance));
         }
         
         layout.push({
