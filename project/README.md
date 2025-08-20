@@ -4,6 +4,7 @@ An interactive smart‑city design and analytics playground. Build and explore a
 
 ### Features
 - **Dual views**: 3D city (Three.js via `@react-three/fiber` + `@react-three/drei`) and **GIS Map** (`leaflet`) with quick switcher
+ - **Dual views**: 3D city (Three.js via `@react-three/fiber` + `@react-three/drei`) and **GIS Map** (`maplibre-gl`) with quick switcher and 2D/3D toggle
 - **Layer controls**: toggle zoning, infrastructure, green spaces, and utilities in the 3D view
 - **Planning workflows** (left control panel tabs):
   - **City Generator**: tune demographics and environment; simulate city generation
@@ -19,7 +20,7 @@ An interactive smart‑city design and analytics playground. Build and explore a
 - **UI**: Tailwind CSS, Lucide icons
 - **3D**: Three.js, `@react-three/fiber`, `@react-three/drei`
 - **Charts**: Recharts
-- **Maps**: Leaflet + OpenStreetMap tiles
+- **Maps**: MapLibre GL + OpenStreetMap tiles (2D/3D tilt/rotate)
 - **AI**: OpenAI Chat Completions (via fetch) and Google Generative AI (Gemini)
 
 ### Getting started
